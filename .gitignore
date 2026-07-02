@@ -1,0 +1,7 @@
+# Generated password files - never commit these
+passwords.txt
+*_passwords.txt
+
+# Python
+__pycache__/
+*.pyc
