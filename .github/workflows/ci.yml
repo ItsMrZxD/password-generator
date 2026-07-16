@@ -1,0 +1,22 @@
+# Continuous integration: run the unit tests on every push and pull request.
+# Standard-library only, so there is nothing to install.
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run tests
+        run: python -m unittest -v

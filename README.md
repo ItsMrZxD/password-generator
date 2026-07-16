@@ -1,5 +1,7 @@
 # Password Generator
 
+[![CI](https://github.com/ItsMrZxD/password-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/ItsMrZxD/password-generator/actions/workflows/ci.yml)
+
 > **Note:** This is my 4th project — I finished it a while ago and completely
 > forgot to upload it to GitHub. Better late than never!
 
@@ -47,6 +49,16 @@ Your password:  kbHJ^YY4>AL:(.m\
 ------------------------------------------------------------
 Strength: Strong   |   Entropy: ~105.4 bits   |   Pool size: 94 characters
 ```
+
+## Tests
+
+```
+python -m unittest
+```
+
+The suite covers the character pools, the per-category guarantee, entropy
+and strength rating boundaries, input validation, and file saving. It runs
+automatically in CI on every push.
 
 ## A note on saving passwords
 
