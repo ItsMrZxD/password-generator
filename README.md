@@ -65,3 +65,7 @@ automatically in CI on every push.
 The save option writes passwords to a **plain text file**. That's fine for
 testing, but don't use it to store real passwords — use a proper password
 manager for that.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
