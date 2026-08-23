@@ -1,52 +1,21 @@
-"""
-Secure Password Generator
-=========================
-
-A command-line application that generates cryptographically secure
-passwords using Python's ``secrets`` module.
-
-Features
---------
-* Choose the password length and which character categories to include
-  (uppercase, lowercase, digits, symbols).
-* Guarantees at least one character from every selected category.
-* Optionally excludes ambiguous look-alike characters (O, 0, I, l, 1).
-* Rates the password strength (Weak / Medium / Strong) and shows an
-  estimate of the password entropy in bits.
-* Can generate several passwords at once, copy the result to the
-  clipboard (when possible) and save passwords to a text file.
-
-Only the Python standard library is required.
-"""
+"""Command-line password generator built on the secrets module."""
 
 import math
 import secrets
 import string
 
-# Characters that are easily confused with one another in many fonts.
 AMBIGUOUS_CHARACTERS = set("O0Il1")
 
-# Entropy thresholds (in bits) used by the strength rating.
 MEDIUM_ENTROPY_BITS = 50
 STRONG_ENTROPY_BITS = 80
 
-# Sensible limits so a typo cannot request a gigantic password or batch.
 MIN_LENGTH = 4
 MAX_LENGTH = 128
 MAX_BATCH_SIZE = 50
 
 
-# --------------------------------------------------------------------------
-# Input helpers
-# --------------------------------------------------------------------------
-
 def ask_yes_no(prompt, default=None):
-    """Ask a yes/no question and return the answer as a boolean.
-
-    Keeps asking until the user types a valid answer.  If ``default``
-    is given (True or False), pressing Enter on an empty line selects
-    that default.
-    """
+    """Empty input selects ``default`` when one is given."""
     while True:
         answer = input(prompt).strip().lower()
         if answer == "" and default is not None:
@@ -59,11 +28,6 @@ def ask_yes_no(prompt, default=None):
 
 
 def ask_int_in_range(prompt, minimum, maximum):
-    """Ask for a whole number between ``minimum`` and ``maximum``.
-
-    Rejects non-numeric input, negative numbers and values outside the
-    allowed range, and keeps asking until the input is valid.
-    """
     while True:
         raw = input(prompt).strip()
         try:
@@ -79,22 +43,14 @@ def ask_int_in_range(prompt, minimum, maximum):
             return value
 
 
-# --------------------------------------------------------------------------
-# Character pools
-# --------------------------------------------------------------------------
-
 def remove_ambiguous(characters):
-    """Return ``characters`` with ambiguous look-alikes removed."""
     return "".join(c for c in characters if c not in AMBIGUOUS_CHARACTERS)
 
 
 def build_character_pools(use_uppercase, use_lowercase, use_digits,
                           use_symbols, exclude_ambiguous):
-    """Build one pool of characters per selected category.
-
-    Returns a list of strings, one per selected category.  Keeping the
-    categories separate (instead of one big string) lets the generator
-    guarantee at least one character from each of them.
+    """One pool per selected category. They stay separate so the generator
+    can guarantee a character from each.
     """
     pools = []
     if use_uppercase:
@@ -110,16 +66,9 @@ def build_character_pools(use_uppercase, use_lowercase, use_digits,
     return pools
 
 
-# --------------------------------------------------------------------------
-# Password generation
-# --------------------------------------------------------------------------
-
 def secure_shuffle(items):
-    """Shuffle a list in place using cryptographically secure randomness.
-
-    This is the Fisher-Yates shuffle driven by ``secrets.randbelow``.
-    ``random.shuffle`` must not be used here because the ``random``
-    module is predictable and unsafe for secrets.
+    """Fisher-Yates driven by secrets.randbelow. random.shuffle is
+    predictable and must not be used here.
     """
     for i in range(len(items) - 1, 0, -1):
         j = secrets.randbelow(i + 1)
@@ -127,19 +76,14 @@ def secure_shuffle(items):
 
 
 def generate_password(length, pools):
-    """Generate one password of ``length`` characters.
-
-    Picks one guaranteed character from every pool first, fills the
-    rest of the password from all pools combined, then shuffles so the
-    guaranteed characters do not always sit at the start.
+    """Takes one character from every pool, fills the rest from all of them
+    combined, then shuffles so the guaranteed ones are not always in front.
     """
     if length < len(pools):
         raise ValueError("Length must be at least the number of categories.")
 
-    # One guaranteed character per selected category.
     password_chars = [secrets.choice(pool) for pool in pools]
 
-    # Fill the remaining positions from every allowed character.
     all_characters = "".join(pools)
     remaining = length - len(password_chars)
     password_chars += [secrets.choice(all_characters) for _ in range(remaining)]
@@ -148,17 +92,9 @@ def generate_password(length, pools):
     return "".join(password_chars)
 
 
-# --------------------------------------------------------------------------
-# Strength and entropy
-# --------------------------------------------------------------------------
-
 def estimate_entropy_bits(length, pool_size):
-    """Estimate password entropy in bits.
-
-    Entropy = length * log2(pool_size): each character adds
-    log2(pool_size) bits because it is drawn uniformly from the pool.
-    The "one per category" guarantee makes the true value slightly
-    lower, so this is a close upper bound.
+    """length * log2(pool_size). The one-per-category guarantee makes the
+    true value slightly lower, so this is an upper bound.
     """
     if pool_size <= 1:
         return 0.0
@@ -166,11 +102,6 @@ def estimate_entropy_bits(length, pool_size):
 
 
 def rate_strength(length, category_count, entropy_bits):
-    """Rate a password as 'Weak', 'Medium' or 'Strong'.
-
-    The rating combines length, character diversity (how many
-    categories are in use) and the entropy estimate.
-    """
     if length < 8 or category_count == 1 or entropy_bits < MEDIUM_ENTROPY_BITS:
         return "Weak"
     if category_count < 3 or entropy_bits < STRONG_ENTROPY_BITS:
@@ -178,18 +109,8 @@ def rate_strength(length, category_count, entropy_bits):
     return "Strong"
 
 
-# --------------------------------------------------------------------------
-# Output helpers
-# --------------------------------------------------------------------------
-
 def copy_to_clipboard(text):
-    """Try to copy ``text`` to the clipboard; return True on success.
-
-    Prefers the third-party ``pyperclip`` library if it happens to be
-    installed, then falls back to the standard-library ``tkinter``.
-    Never raises: if no clipboard mechanism works, it simply returns
-    False and the program carries on.
-    """
+    """Returns False instead of raising when no clipboard is available."""
     try:
         import pyperclip
         pyperclip.copy(text)
@@ -222,16 +143,8 @@ def save_passwords(passwords, filename):
         return False
 
 
-# --------------------------------------------------------------------------
-# User interaction
-# --------------------------------------------------------------------------
-
 def get_generation_options():
-    """Ask the user for all generation settings.
-
-    Returns a tuple ``(pools, length, count)``.  Re-asks the category
-    questions until at least one category is selected.
-    """
+    """Returns ``(pools, length, count)``."""
     while True:
         use_uppercase = ask_yes_no("Include uppercase letters? (Y/n): ", True)
         use_lowercase = ask_yes_no("Include lowercase letters? (Y/n): ", True)
@@ -247,8 +160,7 @@ def get_generation_options():
     pools = build_character_pools(use_uppercase, use_lowercase, use_digits,
                                   use_symbols, exclude_ambiguous)
 
-    # The password must be long enough to fit one character from every
-    # selected category.
+    # Long enough to fit one character from every selected category.
     min_length = max(MIN_LENGTH, len(pools))
     length = ask_int_in_range(
         f"Password length ({min_length}-{MAX_LENGTH}): ",
@@ -261,7 +173,6 @@ def get_generation_options():
 
 
 def show_results(passwords, length, pools):
-    """Print the generated passwords with strength and entropy info."""
     pool_size = sum(len(pool) for pool in pools)
     entropy_bits = estimate_entropy_bits(length, pool_size)
     strength = rate_strength(length, len(pools), entropy_bits)
@@ -280,7 +191,6 @@ def show_results(passwords, length, pools):
 
 
 def offer_extras(passwords):
-    """Offer to copy the (first) password and/or save them to a file."""
     if ask_yes_no("Copy the first password to the clipboard? (y/N): ", False):
         if copy_to_clipboard(passwords[0]):
             print("Copied to clipboard.")
@@ -296,12 +206,7 @@ def offer_extras(passwords):
                   "Remember: the file is plain text - keep it safe!")
 
 
-# --------------------------------------------------------------------------
-# Main program
-# --------------------------------------------------------------------------
-
 def main():
-    """Run the interactive password generator loop."""
     print("=" * 60)
     print("          SECURE PASSWORD GENERATOR")
     print("=" * 60)
@@ -322,5 +227,4 @@ if __name__ == "__main__":
     try:
         main()
     except (KeyboardInterrupt, EOFError):
-        # Exit cleanly on Ctrl+C instead of showing a traceback.
         print("\nCancelled. Goodbye!")

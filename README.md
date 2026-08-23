@@ -9,20 +9,15 @@ A secure command-line password generator written in Python. It uses the
 `secrets` module (not `random`) so the generated passwords are
 cryptographically secure.
 
-## Features
-
-- Choose password length and which character types to include
-  (uppercase, lowercase, numbers, symbols)
-- Guarantees at least one character from every selected category
-- Option to exclude ambiguous characters (`O`, `0`, `I`, `l`, `1`)
-- Strength rating (Weak / Medium / Strong) and entropy estimate in bits
-- Generate multiple passwords at once
-- Copy to clipboard (if available) and save to a text file
-- Full input validation — no crashes on bad input
+You pick the length and which character types to include, and it guarantees at
+least one character from every category you selected. It can also skip
+ambiguous look-alikes (`O`, `0`, `I`, `l`, `1`), rate the result and estimate
+its entropy, generate a batch at once, copy to the clipboard, and append the
+passwords to a text file.
 
 ## Requirements
 
-- Python 3.x — standard library only, nothing to install
+Python 3.x — standard library only, nothing to install.
 
 ## Usage
 
@@ -55,10 +50,6 @@ Strength: Strong   |   Entropy: ~105.4 bits   |   Pool size: 94 characters
 ```
 python -m unittest
 ```
-
-The suite covers the character pools, the per-category guarantee, entropy
-and strength rating boundaries, input validation, and file saving. It runs
-automatically in CI on every push.
 
 ## A note on saving passwords
 
