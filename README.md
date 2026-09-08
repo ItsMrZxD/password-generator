@@ -20,6 +20,22 @@ It can skip ambiguous look-alikes, rate the result, estimate its entropy in
 bits, generate a batch at once, copy to the clipboard, and append the results
 to a text file.
 
+The rating reacts to both length and category mix, not length alone:
+
+```
+Your password:  /_^D(2\!yLFtEPC(
+Strength: Strong   |   Entropy: ~104.9 bits   |   Pool size: 94 characters
+
+Your password:  bifTTEAcZKAa
+Strength: Medium   |   Entropy: ~68.4 bits   |   Pool size: 52 characters
+
+Your password:  zqrtpw
+Strength: Weak     |   Entropy: ~28.2 bits   |   Pool size: 26 characters
+```
+
+Three real runs — 16 characters from all four categories, 12 from letters only,
+and 6 lowercase — with the prompts trimmed for brevity.
+
 ## Features
 
 - **Cryptographically secure** — `secrets.choice` and `secrets.randbelow`
